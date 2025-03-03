@@ -4,7 +4,7 @@ import sharp from 'sharp'; // Import sharp for image preprocessing
 import fetch from 'node-fetch'; // For fetching images from Telegram
 
 // Initialize the bot with the provided token
-const bot = new Telegraf('8028743206:AAFZQOJ-x7mEJ2hrzjwMr_3bnU7hWVmILwk');
+const bot = new Telegraf('#PUTYOUR_APIKEY#');
 
 // Command to start the bot and show a welcome message
 bot.start((ctx) => {
