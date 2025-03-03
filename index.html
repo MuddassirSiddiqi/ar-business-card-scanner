@@ -1,0 +1,163 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>AR Business Card Scanner</title>
+    <!-- Load Tesseract.js for OCR -->
+    <script src="https://cdn.jsdelivr.net/npm/tesseract.js"></script>
+    <!-- Load WebXR Polyfill for AR support -->
+    <script src="https://cdn.jsdelivr.net/npm/webxr-polyfill"></script>
+    <style>
+        /* General Body Styling */
+        body {
+            margin: 0;
+            font-family: Arial, sans-serif;
+            background-color: #000;
+            color: white;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            height: 100vh;
+            overflow: hidden;
+            position: relative;
+        }
+
+        /* Styling the video feed */
+        video {
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+        }
+
+        /* Hide canvas element used for capturing the image */
+        canvas {
+            display: none;
+        }
+
+        /* Control buttons for starting AR and scanning cards */
+        #controls {
+            position: absolute;
+            top: 20px;
+            left: 20px;
+            z-index: 1;
+        }
+
+        button {
+            background-color: #008CBA;
+            border: none;
+            color: white;
+            padding: 15px 20px;
+            font-size: 16px;
+            cursor: pointer;
+            margin: 10px;
+            border-radius: 5px;
+            transition: background-color 0.3s ease;
+        }
+
+        button:hover {
+            background-color: #005f73;
+        }
+
+        /* Output area for extracted text */
+        #output {
+            position: absolute;
+            bottom: 20px;
+            left: 20px;
+            color: white;
+            background: rgba(0, 0, 0, 0.5);
+            padding: 10px;
+            max-width: 80%;
+            font-size: 14px;
+            word-wrap: break-word;
+        }
+    </style>
+</head>
+<body>
+    <div id="controls">
+        <button id="start-ar">Start AR</button>
+        <button id="scan-card">Scan Business Card</button>
+    </div>
+    <div id="output"></div>
+
+    <script>
+        // Initialize WebXR session (this is for AR functionality, can be extended later)
+        const startAR = async () => {
+            const session = await createWebXRSession();
+            if (!session) {
+                alert("WebXR not supported or session creation failed.");
+                return;
+            }
+
+            // Access the camera stream
+            const video = document.createElement("video");
+            navigator.mediaDevices.getUserMedia({ video: true }).then((stream) => {
+                video.srcObject = stream;
+                video.play();
+            });
+
+            document.body.appendChild(video);
+        };
+
+        // Handle the start of AR
+        document.getElementById("start-ar").addEventListener("click", startAR);
+
+        // Handle the scanning of business cards
+        document.getElementById("scan-card").addEventListener("click", async () => {
+            const canvas = document.createElement("canvas");
+            const context = canvas.getContext("2d");
+            const video = document.querySelector("video");
+
+            if (video) {
+                // Set canvas size to match the video size
+                canvas.width = video.videoWidth;
+                canvas.height = video.videoHeight;
+                context.drawImage(video, 0, 0, canvas.width, canvas.height);
+
+                // Extract text from captured frame using OCR
+                const extractedText = await extractTextFromImage(canvas);
+                document.getElementById("output").textContent = extractedText;
+            }
+        });
+
+        // Function to extract text from the captured image using Tesseract.js
+        const extractTextFromImage = (canvas) => {
+            return new Promise((resolve, reject) => {
+                Tesseract.recognize(
+                    canvas,
+                    'eng', // Language for OCR (can be changed)
+                    {
+                        logger: (m) => console.log(m), // Optional logger for OCR progress
+                    }
+                ).then(({ data: { text } }) => {
+                    resolve(text);
+                }).catch((err) => {
+                    reject(err);
+                });
+            });
+        };
+
+        // Simulate AR session creation (you will need to implement actual WebXR AR setup)
+        const createWebXRSession = async () => {
+            try {
+                if (!navigator.xr) {
+                    alert('WebXR not supported in this browser.');
+                    return null;
+                }
+
+                const session = await navigator.xr.requestSession('immersive-ar', {
+                    requiredFeatures: ['hit-test']
+                });
+
+                // Add any additional AR logic here (such as overlays, 3D models, etc.)
+                return session;
+            } catch (error) {
+                console.error('WebXR session creation failed:', error);
+                return null;
+            }
+        };
+    </script>
+</body>
+</html>
